@@ -26,7 +26,7 @@ declare -a arr=("Classic" "Bitcoin Gold" "Bitcoin ABC" "/bitcore:1.1.0/" "/ViaBT
 
 ````
 
-3. Add script to the crontab to run periodically!
+3. Add script to the crontab to run periodically
 
 ```` 
 crontab -e
