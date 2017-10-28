@@ -13,7 +13,7 @@ BTC_CLI=/usr/local/bin/bitcoin-cli
 
 BANNED="/bitcore:1.1.0/,/ViaBTC:bitpeer.0.2.0/,/BitcoinUnlimited:1.0.3(EB16;AD12)/,/Satoshi:1.14.4(2x)/,/bitcoinj:0.14.5/"
 
-#3) The main script based on mawk (not tested with awk or gawk)
+# The main script 
 
 $BTC_CLI getpeerinfo | mawk -F":" -v banned="$BANNED" -v btccli="$BTC_CLI" -- '
 BEGIN {
@@ -50,4 +50,4 @@ if [ "$COUNT" -eq "0" ];then
  echo No client was banned
 fi
 
-#4) add script to the crontab to run periodically!
+# Add script to the crontab to run periodically!
