@@ -19,10 +19,10 @@ sudo apt-get install jq
 CLIENT=/usr/local/bin/bitcoin-cli
 ````
 
-2. Enter the list of nodes you wish to ban in the array
+2. Enter a list of suberversions of nodes, or just part of it, in the array in order to ban them
 
 ```` 
-declare -a arr=("/bitcore:1.1.0/" "/ViaBTC:bitpeer.0.2.0/" "/BitcoinUnlimited:1.0.3(EB16;AD12)/" "/Satoshi:1.14.4(2x)/" "/bitcoinj:0.14.5/")
+declare -a arr=("Classic" "Bitcoin Gold" "Bitcoin ABC" "/bitcore:1.1.0/" "/ViaBTC:bitpeer.0.2.0/" "/BitcoinUnlimited:1.0.3(EB16;AD12)/" "/Satoshi:1.14.4(2x)/" "/bitcoinj:0.14.5/")
 
 ````
 
