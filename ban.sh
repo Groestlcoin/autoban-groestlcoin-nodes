@@ -6,8 +6,7 @@
 # You need to install jq in order to use this script
 command -v jq >/dev/null 2>&1 || { echo >&2 "Please install \"jq\" first. Aborting."; exit 1; }
 
-
-# Step 1) Adjust CLIENT variable so it calls bitcoin-cli with the right parameters
+# Adjust CLIENT variable so it calls bitcoin-cli with the right parameters
 # Non standart installations need to add -conf=/PATHtoYOUR/bitcoin.conf -datadir=/PATH/to/YOUR/Datadir/
 CLIENT=/usr/local/bin/bitcoin-cli
 
@@ -25,14 +24,13 @@ COUNT=0
 # Here you can add the nodes subversion or parts of it in order to ban them
 declare -a arr=("BitcoinUnlimited" "Bitcoin ABC" "Classic" "Bitcoin Gold" "Satoshi:1.1" "Bitcoin XT" "BUCash" "/bitcore:1.1.0/" "/ViaBTC:bitpeer.0.2.0/" "/BitcoinUnlimited:1.0.3(EB16;AD12)/" "/Satoshi:1.14.4(2x)/" "/bitcoinj:0.14.5/")
 
-
 # Write connected nodes to NODES_FILE
 $CLIENT getpeerinfo >$NODES_FILE
 
-# Extract subversion and corresponding IP adress
+# Extract subversion text and the corresponding IP adress
 NODES_TO_BAN=`jq -r '.[] | .addr, .subver'  $NODES_FILE`
 
-# Ban clients with the same subversion as in the array
+# Ban clients with the same or partial subversion as in the array
 TEMP_COUNT=0
 for NODE in ${NODES_TO_BAN[@]}; do
         if [ $TEMP_COUNT -eq 0 ]; then
