@@ -42,7 +42,7 @@ for NODE in ${NODES_TO_BAN[@]}; do
                 for i in "${arr[@]}"
                 do
                         if [ "$SUBVER" == "$i" ]; then
-                                 #$($CLIENT setban $IP "add" ${BAN_TIME})
+                                 $($CLIENT setban $IP "add" ${BAN_TIME})
                                 echo Banned client with Subversion: $SUBVER and IP: $IP >> $BANNED_FILE
                                 COUNT=$((COUNT + 1))
                         fi
