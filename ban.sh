@@ -3,51 +3,55 @@
 # ban.sh
 # shell script to automatically identify and ban certain bitcoin clients
 
-# Step 1) Adjust BTC_CLI variable so it calls bitcoin-cli with the right parameters
+# You need to install jq in order to use this script
+command -v jq >/dev/null 2>&1 || { echo >&2 "Please install \"jq\" first. Aborting."; exit 1; }
+
+# Adjust CLIENT variable so it calls bitcoin-cli with the right parameters
 # Non standart installations need to add -conf=/PATHtoYOUR/bitcoin.conf -datadir=/PATH/to/YOUR/Datadir/
+CLIENT=/usr/local/bin/bitcoin-cli
 
-BTC_CLI=/usr/local/bin/bitcoin-cli
+# Ban Time in seconds, 2592000 = 30 days
+BAN_TIME="2592000"
 
-# Step 2) Enter the list of nodes you wish to ban separated with a comma
-# make sure the peer version doesn't contain any commas
+# Temp files
+NODES_FILE="`mktemp /tmp/connected-nodes.XXXXXXXXXX`"
+BANNED_FILE="`mktemp /tmp/banned-nodes.XXXXXXXXXX`"
 
-BANNED="/bitcore:1.1.0/,/ViaBTC:bitpeer.0.2.0/,/BitcoinUnlimited:1.0.3(EB16;AD12)/,/Satoshi:1.14.4(2x)/,/bitcoinj:0.14.5/"
+# Counter
+COUNT=0
 
-# The main script 
+# Declaration of array of nodes subversion names.
+# Here you can add the nodes you wish to ban.
+declare -a arr=("/bitcore:1.1.0/" "/ViaBTC:bitpeer.0.2.0/" "/BitcoinUnlimited:1.0.3(EB16;AD12)/" "/Satoshi:1.14.4(2x)/" "/bitcoinj:0.14.5/")
 
-$BTC_CLI getpeerinfo | mawk -F":" -v banned="$BANNED" -v btccli="$BTC_CLI" -- '
-BEGIN {
-    split(banned,BAN,",");
-}
-/\"id\"*/ {
-    id=substr($2,2,length($2)-2);ID[id]=id;
-}
-/^....\"addr\"/ {
-    if (substr($2,3,1)=="[") {
-        sadr = substr($0,index($0,":"));
-        start = index(sadr,"[");
-        end = index(sadr,"]");
-        IP[id]=substr(sadr,start,end-3);
-    } else {
-        IP[id]=substr($2,3);
-    }
-}
-/\"subver\"*/ {
-    s=length($1)+4;
-    VER[id]=substr($0,s,(length($0)-s-1));
-}
-END {
-    for (id in ID) {
-        for (banned in BAN) {
-            if(VER[id]==BAN[banned]) {
-                system(btccli" setban "IP[id]" add");
-                echo "Found and banned node version "VER[id]" IP: "IP[id]""
-            }
-        }
-    }
-}'
-if [ "$COUNT" -eq "0" ];then
- echo No client was banned
-fi
+# Write connected nodes to NODES_FILE
+$CLIENT getpeerinfo >$NODES_FILE
 
-# Add script to the crontab to run periodically!
+# Extract subversion and corresponding IP adress
+NODES_TO_BAN=`jq -r '.[] | .addr, .subver'  $NODES_FILE`
+
+# Ban clients with the same subversion as in the array
+TEMP_COUNT=0
+for NODE in ${NODES_TO_BAN[@]}; do
+        if [ $TEMP_COUNT -eq 0 ]; then
+                IP=$NODE
+                TEMP_COUNT=$((TEMP_COUNT + 1))
+        else
+                SUBVER=$NODE
+                TEMP_COUNT=$((TEMP_COUNT - 1))
+                for i in "${arr[@]}"
+                do
+                        if [ "$SUBVER" == "$i" ]; then
+                                 #$($CLIENT setban $IP "add" ${BAN_TIME})
+                                echo Banned client with Subversion: $SUBVER and IP: $IP >> $BANNED_FILE
+                                COUNT=$((COUNT + 1))
+                        fi
+                done
+        fi
+
+done
+cat $BANNED_FILE
+echo Found and banned $COUNT nodes.
+
+rm $NODES_FILE
+rm $BANNED_FILE
